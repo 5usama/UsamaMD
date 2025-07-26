@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@whiskeysockets/baileys": "npm:baileys-pro@latest",
-    "@adiwajshing/keyed-db": "^0.2.5",
+   "@adiwajshing/keyed-db": "latest",
     "@dark-yasiya/yt-dl.js": "1.0.6",
     "@ffmpeg-installer/ffmpeg": "^1.1.1",
     "@vitalets/google-translate-api": "^9.3.0",
