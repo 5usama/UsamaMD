@@ -1,4 +1,4 @@
-<h1 align="center">
+ <h1 align="center">
   <img src="https://i.ibb.co/fV240n0j/file-00000000613061fb9f0c7608c9c6c29a.png" width="150"/><br>
   <b>𝙐𝙎𝘼𝙈𝘼-𝙈𝘿 - WhatsApp Bot</b>
 </h1>
@@ -37,7 +37,7 @@ Visit the pairing website → Get code → Paste in console → Done!
 ```
 
 > ⚡ Super-fast pairing without scanning QR  
-> 🔗 [Pair Code Generator Hosted Version](#) *(Add your URL here)*  
+> 🔗 [Pair Code Generator Hosted Version](#) *([Add your URL here](https://pair-6n5u.onrender.com/))*  
 
 ---
 
