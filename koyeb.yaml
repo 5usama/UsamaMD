@@ -1,4 +1,4 @@
-name: khan-md
+name: usama-md
 services:
   - name: usama-md-service
     type: web
