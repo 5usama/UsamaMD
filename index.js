@@ -548,10 +548,10 @@ if (!isReact && config.CUSTOM_REACT === 'true') {
     //=====================================================
     conn.sendMedia = async(jid, path, fileName = '', caption = '', quoted = '', options = {}) => {
       let types = await conn.getFile(path, true)
-      let { mime, ext, res, data, filename } = types
-      if (res && res.status !== 200 || file.length <= 65536) {
-          try { throw { json: JSON.parse(file.toString()) } } catch (e) { if (e.json) throw e.json }
-      }
+let { mime, ext, res, data, filename } = types
+if (res && res.status !== 200 || data.length <= 65536) {
+    try { throw { json: JSON.parse(data.toString()) } } catch (e) { if (e.json) throw e.json }
+}
       let type = '',
           mimetype = mime,
           pathFile = filename
