@@ -3,18 +3,17 @@ const { cmd } = require('../command');
 const { ytsearch } = require('@dark-yasiya/yt-dl.js');
 
 // MP4 video download
-
 cmd({ 
-    pattern: "mp4", 
-    alias: ["video"], 
+    pattern: "video", 
+    alias: ["video", "video"], 
     react: "🎥", 
-    desc: "Download YouTube video", 
+    desc: "Download Youtube song", 
     category: "main", 
-    use: '.mp4 < Yt url or Name >', 
+    use: '.song < Yt url or Name >', 
     filename: __filename 
 }, async (conn, mek, m, { from, prefix, quoted, q, reply }) => { 
     try { 
-        if (!q) return await reply("Please provide a YouTube URL or video name.");
+        if (!q) return await reply("Please provide a YouTube URL or song name.");
         
         const yt = await ytsearch(q);
         if (yt.results.length < 1) return reply("No results found!");
@@ -28,25 +27,26 @@ cmd({
         if (data.status !== 200 || !data.success || !data.result.download_url) {
             return reply("Failed to fetch the video. Please try again later.");
         }
+        
+        let ytmsg = `🎞️ UsamaMD YT VIDEO DOWNLOADER 🎞️
+        
+╭━━❐━⪼
+┇๏ Title -  ${yts.title}
+┇๏ Duration - ${yts.timestamp}
+┇๏ Views -  ${yts.views}
+┇๏ Author -  ${yts.author.name}
+╰━━❑━⪼`;
 
-        let ytmsg = `📹 *Video Downloader*
-🎬 *Title:* ${yts.title}
-⏳ *Duration:* ${yts.timestamp}
-👀 *Views:* ${yts.views}
-👤 *Author:* ${yts.author.name}
-🔗 *Link:* ${yts.url}
-> Powered By UsamaMD ❤️`;
-
-        // Send video directly with caption
-        await conn.sendMessage(
-            from, 
-            { 
-                video: { url: data.result.download_url }, 
-                caption: ytmsg,
-                mimetype: "video/mp4"
-            }, 
-            { quoted: mek }
-        );
+        await conn.sendMessage(from, { image: { url: data.result.thumbnail || '' }, caption: ytmsg }, { quoted: mek });
+        
+        await conn.sendMessage(from, { video: { url: data.result.download_url }, mimetype: "video/mp4" }, { quoted: mek });
+        
+        await conn.sendMessage(from, { 
+            document: { url: data.result.download_url }, 
+            mimetype: "video/mp4", 
+            fileName: `${data.result.title}.mp4`, 
+            caption: `> *${yts.title}*\n> *© Pᴏᴡᴇʀᴇᴅ Bʏ UsamaMD ♡*`
+        }, { quoted: mek });
 
     } catch (e) {
         console.log(e);
@@ -54,51 +54,54 @@ cmd({
     }
 });
 
-// MP3 song download 
-
 cmd({ 
-    pattern: "song", 
-    alias: ["play", "mp3"], 
+    pattern: "play", 
+    alias: ["play", "play"], 
     react: "🎶", 
-    desc: "Download YouTube song", 
+    desc: "Download Youtube song",
     category: "main", 
-    use: '.song <query>', 
+    use: '.song < Yt url or Name >', 
     filename: __filename 
-}, async (conn, mek, m, { from, sender, reply, q }) => { 
-    try {
-        if (!q) return reply("Please provide a song name or YouTube link.");
+}, async (conn, mek, m, { from, prefix, quoted, q, reply }) => { 
+    try { 
+        if (!q) return await reply("Please provide a YouTube URL or song name.");
 
         const yt = await ytsearch(q);
-        if (!yt.results.length) return reply("No results found!");
-
-        const song = yt.results[0];
-        const apiUrl = `https://apis.davidcyriltech.my.id/youtube/mp3?url=${encodeURIComponent(song.url)}`;
+        if (yt.results.length < 1) return reply("No results found!");
         
-        const res = await fetch(apiUrl);
-        const data = await res.json();
-
-        if (!data?.result?.downloadUrl) return reply("Download failed. Try again later.");
-
-    await conn.sendMessage(from, {
-    audio: { url: data.result.downloadUrl },
-    mimetype: "audio/mpeg",
-    fileName: `${song.title}.mp3`,
-    contextInfo: {
-        externalAdReply: {
-            title: song.title.length > 25 ? `${song.title.substring(0, 22)}...` : song.title,
-            body: "Join our WhatsApp Channel",
-            mediaType: 1,
-            thumbnailUrl: song.thumbnail.replace('default.jpg', 'hqdefault.jpg'),
-            sourceUrl: 'https://whatsapp.com/channel/0029VavSK8U8fewp1htKiS21',
-            mediaUrl: 'https://whatsapp.com/channel/0029VavSK8U8fewp1htKiS21',
-            showAdAttribution: true,
-            renderLargerThumbnail: true
+        let yts = yt.results[0];  
+        let apiUrl = `https://apis.davidcyriltech.my.id/youtube/mp3?url=${encodeURIComponent(yts.url)}`;
+        
+        let response = await fetch(apiUrl);
+        let data = await response.json();
+        
+        if (data.status !== 200 || !data.success || !data.result.downloadUrl) {
+            return reply("Failed to fetch the audio. Please try again later.");
         }
-    }
-}, { quoted: mek });
+        
+        let ytmsg = `🎧 UsamaMD YT MP3 DOWNLOADER 🎧
+        
+╭━━❐━⪼
+┇๏ Title -  ${yts.title}
+┇๏ Duration - ${yts.timestamp}
+┇๏ Views -  ${yts.views}
+┇๏ Author -  ${yts.author.name} 
+╰━━❑━⪼
+> © Pᴏᴡᴇʀᴇᴅ Bʏ UsamaMD ♡`;
 
-    } catch (error) {
-        console.error(error);
-        reply("An error occurred. Please try again.");
+        await conn.sendMessage(from, { image: { url: data.result.image || '' }, caption: ytmsg }, { quoted: mek });
+        
+        await conn.sendMessage(from, { audio: { url: data.result.downloadUrl }, mimetype: "audio/mpeg" }, { quoted: mek });
+        
+        await conn.sendMessage(from, { 
+            document: { url: data.result.downloadUrl }, 
+            mimetype: "audio/mpeg", 
+            fileName: `${data.result.title}.mp3`, 
+            caption: `> *© Pᴏᴡᴇʀᴇᴅ Bʏ UsamaMD ♡*`
+        }, { quoted: mek });
+
+    } catch (e) {
+        console.log(e);
+        reply("An error occurred. Please try again later.");
     }
 });
