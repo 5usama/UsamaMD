@@ -1,6 +1,6 @@
 const config = require('../config');
 const { cmd } = require('../command');
-const ytsearch = require('@dark-yasiya/yt-dl.js');
+const { ytsearch } = require('@dark-yasiya/yt-dl.js');
 
 cmd({ 
     pattern: "play", 
