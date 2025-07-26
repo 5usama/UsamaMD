@@ -8,7 +8,7 @@
     "stop": "pm2 stop UsamaMD",
     "restart": "pm2 restart UsamaMD"
   },
-"dependencies": {
+  "dependencies": {
     "@whiskeysockets/baileys": "npm:baileys-pro@latest",
     "@adiwajshing/keyed-db": "^0.2.5",
     "@dark-yasiya/yt-dl.js": "1.0.6",
