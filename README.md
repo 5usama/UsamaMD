@@ -37,7 +37,7 @@ Visit the pairing website → Get code → Paste in console → Done!
 ```
 
 > ⚡ Super-fast pairing without scanning QR  
-> 🔗 [Pair Code Generator Hosted Version](#) *([Add your URL here](https://pair-6n5u.onrender.com/))*  
+> 🔗 [[Pair Code Generator Hosted Version](https://pair-6n5u.onrender.com)](#)
 
 ---
 
