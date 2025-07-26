@@ -1,119 +1,102 @@
 const config = require('../config');
 const { cmd } = require('../command');
-const { ytsearch, ytmp3, ytmp4 } = require('@dark-yasiya/yt-dl.js'); 
+const DY_SCRAP = require('@dark-yasiya/scrap');
+const dy_scrap = new DY_SCRAP();
 
-// video
-
-cmd({ 
-    pattern: "video", 
-    alias: ["video", "video"], 
-    react: "🎥", 
-    desc: "Download Youtube song", 
-    category: "main", 
-    use: '.song < Yt url or Name >', 
-    filename: __filename 
-}, async (conn, mek, m, { from, args, q, reply, react }) => { 
-    try { 
-        if (!q) return await reply("Please provide a YouTube URL or song name.");
-        
-        const yt = await ytsearch(q);
-        if (yt.results.length < 1) return reply("No results found!");
-        
-        let yts = yt.results[0];  
-        let apiUrl = `https://apis.davidcyriltech.my.id/download/ytmp4?url=${encodeURIComponent(yts.url)}`;
-        
-        let response = await fetch(apiUrl);
-        let data = await response.json();
-        
-        if (data.status !== 200 || !data.success || !data.result.download_url) {
-            return reply("Failed to fetch the video. Please try again later.");
-        }
-        
-        let ytmsg = `*🎞️ UsamaMD YT VIDEO DOWNLOADER 🎞️*
-        
-╭━━❐━⪼
-┇๏ *Title* -  ${yts.title}
-┇๏ *Duration* - ${yts.timestamp}
-┇๏ *Views* -  ${yts.views}
-┇๏ *Author* -  ${yts.author.name}
-╰━━❑━⪼`;
-
-        // Send video details
-        await conn.sendMessage(from, { image: { url: data.result.thumbnail || '' }, caption: ytmsg }, { quoted: mek });
-        
-        // Send video file
-        await conn.sendMessage(from, { video: { url: data.result.download_url }, mimetype: "video/mp4" }, { quoted: mek });
-        
-        // Send document file (optional)
-        await conn.sendMessage(from, { 
-            document: { url: data.result.download_url }, 
-            mimetype: "video/mp4", 
-            fileName: `${data.result.title}.mp4`, 
-            caption: `> *${yts.title}*\n> *© Powered By UsamaMD ♡*`
-        }, { quoted: mek });
-
-    } catch (e) {
-        console.log(e);
-        reply("An error occurred. Please try again later.");
-    }
-});  
-       
-// play
-
-cmd({ 
-     pattern: "play", 
-     alias: ["play", "play"], 
-     react: "🎶", 
-     desc: "Download Youtube song",
-     category: "main", 
-     use: '.song < Yt url or Name >', 
-     filename: __filename }, 
- async (conn, mek, m, { from, args, q, reply, react }) => 
-     
-     { try { if (!q) return await reply("Please provide a YouTube URL or song name.");
-
-const yt = await ytsearch(q);
-    if (yt.results.length < 1) return reply("No results found!");
-    
-    let yts = yt.results[0];  
-    let apiUrl = `https://apis.davidcyriltech.my.id/youtube/mp3?url=${encodeURIComponent(yts.url)}`;
-    
-    let response = await fetch(apiUrl);
-    let data = await response.json();
-    
-    if (data.status !== 200 || !data.success || !data.result.downloadUrl) {
-        return reply("Failed to fetch the audio. Please try again later.");
-    }
-    
-    let ytmsg = `*🎧 UsamaMD YT MP3 DOWNLOADER 🎧*
-    
-╭━━❐━⪼
-┇๏ *Tital* -  ${yts.title}
-┇๏ *Duration* - ${yts.timestamp}
-┇๏ *Views* -  ${yts.views}
-┇๏ *Author* -  ${yts.author.name} 
-╰━━❑━⪼
-> *© Pᴏᴡᴇʀᴇᴅ Bʏ UsamaMD ♡*`;
-
-
-
-// Send song details
-    await conn.sendMessage(from, { image: { url: data.result.image || '' }, caption: ytmsg }, { quoted: mek });
-    
-    // Send audio file
-    await conn.sendMessage(from, { audio: { url: data.result.downloadUrl }, mimetype: "audio/mpeg" }, { quoted: mek });
-    
-    // Send document file
-    await conn.sendMessage(from, { 
-        document: { url: data.result.downloadUrl }, 
-        mimetype: "audio/mpeg", 
-        fileName: `${data.result.title}.mp3`, 
-        caption: `> *© PoweredBy UsamaMD ♡*`
-    }, { quoted: mek });
-
-} catch (e) {
-    console.log(e);
-    reply("An error occurred. Please try again later.");
+function replaceYouTubeID(url) {
+    const regex = /(?:youtube\.com\/(?:.*v=|.*\/)|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
 }
 
+cmd({
+    pattern: "play3",
+    alias: ["mp3", "ytmp3"],
+    react: "🎵",
+    desc: "Download Ytmp3",
+    category: "download",
+    use: ".song <Text or YT URL>",
+    filename: __filename
+}, async (conn, m, mek, { from, q, reply }) => {
+    try {
+        if (!q) return await reply("❌ Please provide a Query or Youtube URL!");
+
+        let id = q.startsWith("https://") ? replaceYouTubeID(q) : null;
+
+        if (!id) {
+            const searchResults = await dy_scrap.ytsearch(q);
+            if (!searchResults?.results?.length) return await reply("❌ No results found!");
+            id = searchResults.results[0].videoId;
+        }
+
+        const data = await dy_scrap.ytsearch(`https://youtube.com/watch?v=${id}`);
+        if (!data?.results?.length) return await reply("❌ Failed to fetch video!");
+
+        const { url, title, image, timestamp, ago, views, author } = data.results[0];
+
+        let info = `🍄 *𝚂𝙾𝙽𝙶 𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝚁* 🍄\n\n` +
+            `🎵 *Title:* ${title || "Unknown"}\n` +
+            `⏳ *Duration:* ${timestamp || "Unknown"}\n` +
+            `👀 *Views:* ${views || "Unknown"}\n` +
+            `🌏 *Release Ago:* ${ago || "Unknown"}\n` +
+            `👤 *Author:* ${author?.name || "Unknown"}\n` +
+            `🖇 *Url:* ${url || "Unknown"}\n\n` +
+            `🔽 *Reply with your choice:*\n` +
+            `1.1 *Audio Type* 🎵\n` +
+            `1.2 *Document Type* 📁\n\n` +
+            `${config.FOOTER || "UsamaMD"}`;
+
+        const sentMsg = await conn.sendMessage(from, { image: { url: image }, caption: info }, { quoted: mek });
+        const messageID = sentMsg.key.id;
+        await conn.sendMessage(from, { react: { text: '🎶', key: sentMsg.key } });
+
+        // Listen for user reply only once!
+        conn.ev.on('messages.upsert', async (messageUpdate) => { 
+            try {
+                const mekInfo = messageUpdate?.messages[0];
+                if (!mekInfo?.message) return;
+
+                const messageType = mekInfo?.message?.conversation || mekInfo?.message?.extendedTextMessage?.text;
+                const isReplyToSentMsg = mekInfo?.message?.extendedTextMessage?.contextInfo?.stanzaId === messageID;
+
+                if (!isReplyToSentMsg) return;
+
+                let userReply = messageType.trim();
+                let msg;
+                let type;
+                let response;
+                
+                if (userReply === "1.1") {
+                    msg = await conn.sendMessage(from, { text: "⏳ Processing..." }, { quoted: mek });
+                    response = await dy_scrap.ytmp3(`https://youtube.com/watch?v=${id}`);
+                    let downloadUrl = response?.result?.download?.url;
+                    if (!downloadUrl) return await reply("❌ Download link not found!");
+                    type = { audio: { url: downloadUrl }, mimetype: "audio/mpeg" };
+                    
+                } else if (userReply === "1.2") {
+                    msg = await conn.sendMessage(from, { text: "⏳ Processing..." }, { quoted: mek });
+                    const response = await dy_scrap.ytmp3(`https://youtube.com/watch?v=${id}`);
+                    let downloadUrl = response?.result?.download?.url;
+                    if (!downloadUrl) return await reply("❌ Download link not found!");
+                    type = { document: { url: downloadUrl }, fileName: `${title}.mp3`, mimetype: "audio/mpeg", caption: title };
+                    
+                } else { 
+                    return await reply("❌ Invalid choice! Reply with 1.1 or 1.2.");
+                }
+
+                await conn.sendMessage(from, type, { quoted: mek });
+                await conn.sendMessage(from, { text: '✅ Media Upload Successful ✅', edit: msg.key });
+
+            } catch (error) {
+                console.error(error);
+                await reply(`❌ *An error occurred while processing:* ${error.message || "Error!"}`);
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        await conn.sendMessage(from, { react: { text: '❌', key: mek.key } });
+        await reply(`❌ *An error occurred:* ${error.message || "Error!"}`);
+    }
 });
+                               
