@@ -98,16 +98,23 @@ const port = process.env.PORT || 9090;
       
   conn.ev.on('connection.update', (update) => {
   const { connection, lastDisconnect } = update
-  if (connection === 'close') {
-  const statusCode = lastDisconnect?.error?.output?.statusCode;
-  
-  if (statusCode !== DisconnectReason.loggedOut) {
-    console.log(`Disconnected with reason code ${statusCode}, reconnecting...`);
+ const { DisconnectReason } = require('@whiskeysockets/baileys');
+
+if (connection === 'close') {
+  const shouldReconnect =
+    lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut &&
+    lastDisconnect?.error?.message !== 'Connection Closed';
+
+  console.log('🛑 Disconnect info:', lastDisconnect?.error);
+
+  if (shouldReconnect) {
+    console.log('🔁 Attempting to reconnect...');
     connectToWA();
   } else {
-    console.log('User has logged out. Not reconnecting.');
+    console.log('🔒 Logged out or intentionally closed. Not reconnecting.');
   }
-} else if (connection === 'open') {
+}
+ else if (connection === 'open') {
   console.log(' Installing Plugins')
   const path = require('path');
   fs.readdirSync("./plugins/").forEach((plugin) => {
