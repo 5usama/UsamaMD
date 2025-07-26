@@ -99,11 +99,15 @@ const port = process.env.PORT || 9090;
   conn.ev.on('connection.update', (update) => {
   const { connection, lastDisconnect } = update
   if (connection === 'close') {
-  const statuscode = lastDisconnect?.error?.output?.statusCode;
-	  if (!== DisconnectReason.loggedOut) {
-  connectToWA()
+  const statusCode = lastDisconnect?.error?.output?.statusCode;
+  
+  if (statusCode !== DisconnectReason.loggedOut) {
+    console.log(`Disconnected with reason code ${statusCode}, reconnecting...`);
+    connectToWA();
+  } else {
+    console.log('User has logged out. Not reconnecting.');
   }
-  } else if (connection === 'open') {
+} else if (connection === 'open') {
   console.log(' Installing Plugins')
   const path = require('path');
   fs.readdirSync("./plugins/").forEach((plugin) => {
