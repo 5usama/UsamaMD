@@ -1,7 +1,6 @@
 const config = require('../config');
 const { cmd } = require('../command');
 const ytsearch = require('@dark-yasiya/scrap');
-const dy_scrap = new DY_SCRAP();
 
 cmd({ 
     pattern: "play", 
