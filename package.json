@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "description": "A WhatsApp Bot Created By Usama Dhuddi",
   "main": "index.js",
-   "engines": {
-      "node": ">= 20.x",
-      "npm": ">= 10.x"
-   },
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
