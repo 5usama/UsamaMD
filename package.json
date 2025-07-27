@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "A WhatsApp Bot Created By Usama Dhuddi",
   "main": "index.js",
+   "engines": {
+      "node": ">= 20.x",
+      "npm": ">= 10.x"
+   },
   "scripts": {
-    "start": "pm2 start index.js --deep-monitoring --attach --name UsamaMD",
-    "stop": "pm2 stop UsamaMD",
-    "restart": "pm2 restart UsamaMD"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
 "dependencies": {
     "@whiskeysockets/baileys": "npm:baileys-pro@latest",
