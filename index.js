@@ -100,7 +100,7 @@ const port = process.env.PORT || 9090;
           auth: state,
           version
           })
-      
+    }
   conn.ev.on('connection.update', (update) => {
   const { connection, lastDisconnect } = update
  const { DisconnectReason } = require('@whiskeysockets/baileys');
