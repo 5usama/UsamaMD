@@ -180,7 +180,7 @@ https://github.com/5usama/UsamaMD
         console.error("Connection error:", e);
         setTimeout(connectToWA, 10000);
     }
-}
+
 
   conn.ev.on('messages.update', async updates => {
     for (const update of updates) {
