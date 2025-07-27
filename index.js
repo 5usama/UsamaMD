@@ -66,54 +66,75 @@ const {
   setInterval(clearTempDir, 5 * 60 * 1000);
   
   //===================SESSION-AUTH============================
+// Replace your session auth section with this more robust version
 if (!fs.existsSync(__dirname + '/sessions/creds.json')) {
-if(!config.SESSION_ID) return console.log('Please add your session to SESSION_ID env !!')
-const sessdata = config.SESSION_ID.replace("UsamaMD~", '');
-const filer = File.fromURL(`https://mega.nz/file/${sessdata}`)
-filer.download((err, data) => {
-if(err) throw err
-fs.writeFile(__dirname + '/sessions/creds.json', data, () => {
-console.log("UsamaMD Session downloaded ✅")
-})})}
-
+    if(!config.SESSION_ID) {
+        console.log('Please add your session to SESSION_ID env!!');
+        process.exit(1);
+    }
+    
+    const sessdata = config.SESSION_ID.replace("UsamaMD~", '');
+    try {
+        const filer = File.fromURL(`https://mega.nz/file/${sessdata}`);
+        filer.download((err, data) => {
+            if(err) {
+                console.error("Failed to download session:", err);
+                // Create empty session if download fails
+                fs.writeFileSync(__dirname + '/sessions/creds.json', '{}');
+                console.log("Created empty session file, please scan QR");
+            } else {
+                fs.writeFileSync(__dirname + '/sessions/creds.json', data);
+                console.log("UsamaMD Session downloaded ✅");
+            }
+            connectToWA();
+        });
+    } catch (e) {
+        console.error("Session download error:", e);
+        fs.writeFileSync(__dirname + '/sessions/creds.json', '{}');
+        connectToWA();
+    }
+} else {
+    connectToWA();
+}
 const express = require("express");
 const app = express();
 const port = process.env.PORT || 9090;
   
   //=============================================
-  
   async function connectToWA() {
-  console.log("UsamaMD is Connecting to WhatsApp ⏳️...");
-  const { state, saveCreds } = await useMultiFileAuthState(__dirname + '/sessions/')
-  var { version } = await fetchLatestBaileysVersion()
-  
-  const conn = makeWASocket({
-          logger: P({ level: 'silent' }),
-          printQRInTerminal: false,
-          browser: Browsers.macOS("Firefox"),
-          syncFullHistory: true,
-          auth: state,
-          version
-          })
-      
-  conn.ev.on('connection.update', (update) => {
-  const { connection, lastDisconnect } = update
-  if (connection === 'close') {
-  if (lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut) {
-  connectToWA()
-  }
-  } else if (connection === 'open') {
-  console.log(' Installing Plugins')
-  const path = require('path');
-  fs.readdirSync("./plugins/").forEach((plugin) => {
-  if (path.extname(plugin).toLowerCase() == ".js") {
-  require("./plugins/" + plugin);
-  }
-  });
-  console.log('UsamaMD Plugins installed successful ✅')
-  console.log('UsamaMD connected to whatsapp ✅')
-  
-  let up = `Hello there *UsamaMD* User!
+    try {
+        console.log("UsamaMD is Connecting to WhatsApp ⏳️...");
+        const { state, saveCreds } = await useMultiFileAuthState(__dirname + '/sessions/');
+        
+        // Force use a stable version instead of fetching latest
+        const version = [2, 2413, 1]; // Use a known working version
+        
+        const conn = makeWASocket({
+            logger: P({ level: 'silent' }),
+            printQRInTerminal: true, // Enable QR code display
+            browser: Browsers.macOS("Firefox"),
+            auth: state,
+            version
+        });
+        
+        // Add connection timeout
+        const connectionTimeout = setTimeout(() => {
+            if(conn.user?.id) return;
+            console.log("Connection timeout, retrying...");
+            conn.end();
+            setTimeout(connectToWA, 5000);
+        }, 30000);
+
+        conn.ev.on('connection.update', (update) => {
+            const { connection, lastDisconnect } = update;
+            
+            if (connection === 'open') {
+                clearTimeout(connectionTimeout);
+                console.log('Connected successfully!');
+                console.log('UsamaMD Plugins installed successful ✅');
+                console.log('UsamaMD connected to whatsapp ✅');
+                
+                let up = `Hello there *UsamaMD* User!
 
 *UsamaMD* WhatsApp Bot.
 
@@ -127,12 +148,39 @@ Dont forget to give star to repo ⬇️
 https://github.com/5usama/UsamaMD
 
 > *Powered BY USAMA DHUDDI RAJPOOT*`;
-    conn.sendMessage(conn.user.id, { image: { url: `https://i.ibb.co/fV240n0j/file-00000000613061fb9f0c7608c9c6c29a.png` }, caption: up })
-  }
-  })
-  conn.ev.on('creds.update', saveCreds)
+                
+                conn.sendMessage(conn.user.id, { 
+                    image: { url: `https://i.ibb.co/fV240n0j/file-00000000613061fb9f0c7608c9c6c29a.png` }, 
+                    caption: up 
+                }).catch(e => console.error('Failed to send welcome message:', e));
+            }
+            
+            if (connection === 'close') {
+                clearTimeout(connectionTimeout);
+                const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut;
+                console.log('Connection closed due to:', lastDisconnect.error, ', reconnecting:', shouldReconnect);
+                if(shouldReconnect) {
+                    setTimeout(connectToWA, 5000);
+                }
+            }
+        });
 
-  //==============================
+        conn.ev.on('creds.update', saveCreds);
+
+        // Add other event handlers here
+        conn.ev.on('messages.update', async updates => {
+            // Your message update handler
+        });
+
+        conn.ev.on("group-participants.update", (update) => {
+            // Your group participants update handler
+        });
+
+    } catch (e) {
+        console.error("Connection error:", e);
+        setTimeout(connectToWA, 10000);
+    }
+}
 
   conn.ev.on('messages.update', async updates => {
     for (const update of updates) {
