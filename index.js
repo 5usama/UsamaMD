@@ -105,7 +105,7 @@ async function connectToWA() {
         conn = makeWASocket({
             logger: P({ level: 'silent' }),
             printQRInTerminal: true,
-            Browsers.windows('Edge'),
+            browser: Browsers.macOS("Firefox"),
             auth: state,
             version
         });
