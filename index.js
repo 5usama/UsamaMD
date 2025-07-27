@@ -87,11 +87,6 @@ const port = process.env.PORT || 9090;
   const { state, saveCreds } = await useMultiFileAuthState(__dirname + '/sessions/')
   var { version } = await fetchLatestBaileysVersion()
   
-    async function connectToWA() {
-  console.log("Connecting to WhatsApp ⏳️...");
-  const { state, saveCreds } = await useMultiFileAuthState(__dirname + '/sessions/')
-  var { version } = await fetchLatestBaileysVersion()
-  
   const conn = makeWASocket({
           logger: P({ level: 'silent' }),
           printQRInTerminal: false,
@@ -100,26 +95,14 @@ const port = process.env.PORT || 9090;
           auth: state,
           version
           })
-    }
+      
   conn.ev.on('connection.update', (update) => {
   const { connection, lastDisconnect } = update
- const { DisconnectReason } = require('@whiskeysockets/baileys');
-
-if (connection === 'close') {
-  const shouldReconnect =
-    lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut &&
-    lastDisconnect?.error?.message !== 'Connection Closed';
-
-  console.log('🛑 Disconnect info:', lastDisconnect?.error);
-
-  if (shouldReconnect) {
-    console.log('🔁 Attempting to reconnect...');
-    connectToWA();
-  } else {
-    console.log('🔒 Logged out or intentionally closed. Not reconnecting.');
+  if (connection === 'close') {
+  if (lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut) {
+  connectToWA()
   }
-}
- else if (connection === 'open') {
+  } else if (connection === 'open') {
   console.log(' Installing Plugins')
   const path = require('path');
   fs.readdirSync("./plugins/").forEach((plugin) => {
@@ -552,7 +535,7 @@ if (!isReact && config.CUSTOM_REACT === 'true') {
     }
     //=====================================================
     conn.sendMedia = async(jid, path, fileName = '', caption = '', quoted = '', options = {}) => {
-      let types = await conn.getFile(path, true)
+let types = await conn.getFile(path, true)
 let { mime, ext, res, data, filename } = types
 if (res && res.status !== 200 || data.length <= 65536) {
     try { throw { json: JSON.parse(data.toString()) } } catch (e) { if (e.json) throw e.json }
